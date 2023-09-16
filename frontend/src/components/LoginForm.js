@@ -7,35 +7,65 @@ import RadioGroup from '@mui/material/RadioGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
+import { Link } from "react-router-dom"
 
 function LoginForm() {
-    const [value, setValue] = useState('yes');
+    const [username, setUserName] = useState('')
+    const [passwd, setPasswd] = useState('')
+    const [email, setEmail] = useState('')
+    const [isAdmin, setAdmin] = useState('false')
 
-    const handleChange = (event) => {
-        setValue(event.target.value);
-    };
+    function handleSubmit(event) {
+        event.preventDefault();
+        console.log(username, passwd, email, isAdmin) 
+    }
+ 
     return (
-        <div>
+        <>
+        <form onSubmit={handleSubmit}>
             <TextField
-                required
-                id="outlined-required"
+                type="text"
+                variant='outlined'
+                color='primary'
                 label="Username"
+                onChange={e => setUserName(e.target.value)}
+                value={username}
+                fullWidth
+                required
             />
             <br /><br />
             <TextField
-                required
-                id="outlined-required"
+                type="password"
+                variant='outlined'
+                color='primary'
                 label="Password"
+                onChange={e => setPasswd(e.target.value)}
+                value={passwd}
+                required
+                fullWidth
+                sx={{mb: 4}}
             />
-            <br /><br />
+            <br />
+            <TextField
+                type="email"
+                variant='outlined'
+                color='primary'
+                label="Email"
+                onChange={e => setEmail(e.target.value)}
+                value={email}
+                fullWidth
+                required
+                sx={{mb: 4}}
+            />
+            <br />
             <div>
                 <FormControl>
                     <FormLabel id="demo-controlled-radio-buttons-group">Admin</FormLabel>
                     <RadioGroup
                         aria-labelledby="demo-controlled-radio-buttons-group"
                         name="controlled-radio-buttons-group"
-                        value={value}
-                        onChange={handleChange}
+                        value={isAdmin}
+                        onChange={e => setAdmin(e.target.value)}
                     >
                         <FormControlLabel value="yes" control={<Radio />} label="Yes" />
                         <FormControlLabel value="no" control={<Radio />} label="No" />
@@ -43,9 +73,11 @@ function LoginForm() {
                 </FormControl>
             </div>
             <br />
-            <Button variant="contained">Login</Button>
+            <Button variant="contained" color="primary" type="submit">Login</Button>
             <br /><br />
-        </div>
+        </form>
+        <small>Need to create an account?<Link to="/">Sign up here</Link></small>
+        </>
     )
 }
 
