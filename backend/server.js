@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 app.use(cors());
@@ -24,27 +26,33 @@ db.connect((err) => {
 app.post('/login', (req, res) => {
     const { username, passwd, email, isAdmin } = req.body;
 
-    db.query('SELECT * FROM users WHERE username = ? and password = ?', [username, passwd], async (error, results) => {
+    db.query('SELECT * FROM users WHERE username = ? AND email = ? AND is_admin = ?', [username, email, isAdmin], async (error, results) => {
         if (error) {
             console.error(error);
             return res.status(500).json({ success: false, message: 'Internal server error' });
         }
 
         if (results.length === 0) {
+            console.log("Result = 0")
             return res.status(401).json({ success: false, message: 'Authentication failed' });
         }
 
+        const user = results[0];
+        console.log(user);
+
+        const passwordMatch = await bcrypt.compare(passwd, user.password);
+
+        // console.log(hashedPassword);
+        // console.log(passwd);
+        // console.log(user.password);
+        // console.log(passwordMatch);
+
+        if (!passwordMatch) {
+            console.log("Pwd did not match")
+          return res.status(401).json({ success: false, message: 'Authentication failed' });
+        }
+
         res.json({ success: true, message: 'Login successful' });
-
-        // const user = results[0];
-
-        // // Compare the provided password with the hashed password stored in the database
-        // const passwordMatch = await bcrypt.compare(password, user.password);
-
-        // if (!passwordMatch) {
-        //   // Passwords do not match
-        //   return res.status(401).json({ success: false, message: 'Authentication failed' });
-        // }
 
         // // Generate a JWT token
         // const token = generateToken(user);
@@ -59,7 +67,7 @@ app.post('/login', (req, res) => {
 app.post('/signup', async (req, res) => {
     const { username, passwd, email, isAdmin } = req.body;
 
-    db.query('SELECT * FROM users WHERE username = ? OR password = ? or email = ?', [username, passwd, email], async (error, results) => {
+    db.query('SELECT * FROM users WHERE username = ? OR email = ?', [username, email], async (error, results) => {
         if (error) {
             console.error(error);
             return res.status(500).json({ success: false, message: 'Internal server error' });
@@ -70,10 +78,10 @@ app.post('/signup', async (req, res) => {
         }
 
         // Hash the password
-        //   const hashedPassword = await bcrypt.hash(password, 10); // 10 is the saltRounds
+        const hashedPassword = await bcrypt.hash(passwd, 10); // 10 is the saltRounds
 
         // Insert the user into the database
-        db.query('INSERT INTO users (username, password, email, is_admin) VALUES (?, ?, ?, ?)', [username, passwd, email, isAdmin], (error) => {
+        db.query('INSERT INTO users (username, password, email, is_admin) VALUES (?, ?, ?, ?)', [username, hashedPassword, email, isAdmin], (error) => {
             if (error) {
                 console.error(error);
                 return res.status(500).json({ success: false, message: 'Internal server error' });
