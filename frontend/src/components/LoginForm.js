@@ -8,7 +8,7 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
 
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import Typography from '@mui/material/Typography';
 
 
@@ -17,6 +17,8 @@ function LoginForm() {
     const [passwd, setPasswd] = useState('')
     const [email, setEmail] = useState('')
     const [isAdmin, setAdmin] = useState('false')
+
+    const navigate = useNavigate();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -34,6 +36,15 @@ function LoginForm() {
 
         if (data.success) {
             console.log('Login successful');
+            console.log("Admin or not", isAdmin)
+            if (isAdmin === 1) {
+                console.log("Navigating to admin")
+                navigate('/admin')
+            }
+            else {
+                console.log("Navigating to user")
+                navigate('/user')
+            }
         } else {
             console.error('Login failed:', data.message);
         }

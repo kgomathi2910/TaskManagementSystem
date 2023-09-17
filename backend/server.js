@@ -97,6 +97,21 @@ app.post('/signup', async (req, res) => {
 });
 
 
+app.get('/getTasks', async (req, res) => {
+    db.query('SELECT * FROM tasks', async (error, results) => {
+        if (error) {
+            console.error(error);
+            return res.status(500).json({ success: false, message: 'Internal server error' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ success: false, message: 'No tasks found' });
+        }
+
+        res.status(200).json({ success: true, tasks: results });
+    });
+});
+
 
 app.listen(8081, () => {
     console.log(`Server is running on port 8081`);
