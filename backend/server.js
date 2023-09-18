@@ -52,7 +52,8 @@ app.post('/login', (req, res) => {
           return res.status(401).json({ success: false, message: 'Authentication failed' });
         }
 
-        res.json({ success: true, message: 'Login successful' });
+        res.json({ success: true, message: 'Login successful', idUser: user.id});
+        console.log("Id: ", user.id)
 
         // // Generate a JWT token
         // const token = generateToken(user);
@@ -112,6 +113,37 @@ app.get('/getTasks', async (req, res) => {
     });
 });
 
+
+app.post('/addTask', async (req, res) => {
+    try {
+        console.log("New task from backend: ", req.body);
+        const { title, description, status, deadline, assignBy, assignTo, tag } = req.body;
+
+        db.query('SELECT * FROM users WHERE id = ?', [assignTo], async (error, results) => {
+            if (error) {
+                console.error(error);
+                return res.status(500).json({ success: false, message: 'Error' });
+            }
+            if (results.length === 0) {
+                return res.status(409).json({ success: false, message: 'No such user to assign task to' });
+            }})
+
+        db.query(
+            'INSERT INTO tasks (title, description, status, deadline, assigned_by, assigned_to, tag) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [title, description, status, deadline, assignBy, assignTo, tag],
+            (error, results) => {
+                if (error) {
+                    console.error(error);
+                    return res.status(500).json({ success: false, message: 'Internal server error' });
+                }
+                return res.status(200).json({ success: true, message: 'Task added' });
+            }
+        );
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+}) 
 
 app.listen(8081, () => {
     console.log(`Server is running on port 8081`);

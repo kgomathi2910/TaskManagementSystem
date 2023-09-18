@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { useParams } from "react-router";
 import AdminSideNav from './AdminSideNav';
+import { useNavigate } from "react-router-dom"
 import {
     Typography,
     Table,
@@ -22,6 +24,10 @@ function AdminTasks() {
     const [taskData, setTaskData] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const { id } = useParams();
+    console.log("Admin ID from admin tasks", id)
+    const [statusValue, setStatusValue] = useState('');
+    const navigate = useNavigate();
 
     const handleOpenModal = () => {
         setIsModalOpen(true);
@@ -64,6 +70,7 @@ function AdminTasks() {
         p: 4,
     };
 
+
     useEffect(() => {
         const getTaskData = async () => {
             const reqData = await fetch('http://localhost:8081/getTasks');
@@ -79,7 +86,66 @@ function AdminTasks() {
         console.log("TaskData has changed:", taskData);
     }, [taskData]);
 
-    const handleEditTask = () => {
+
+
+    const addTaskHandler = async () => {
+        try {
+            const title = document.getElementById("titleInput").value;
+            const description = document.getElementById("descInput").value;
+            const deadline = document.getElementById("deadlineInput").value;
+            // const status = document.getElementById("statusInput").value;
+            const status = statusValue;
+            const tag = document.getElementById("tagInput").value;
+            const assignTo = document.getElementById("assignedToInput").value;
+
+            if (id === undefined) {
+                console.error("adminId is undefined");
+                return;
+            }
+
+            const assignBy = id;
+
+            console.log("Status: ", status)
+
+            const newTask = {
+                title,
+                description,
+                status,
+                deadline,
+                assignBy,
+                assignTo,
+                tag
+            };
+            console.log("new task", newTask);
+
+            const response = await fetch("http://localhost:8081/addTask", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(newTask),
+            });
+
+            if (response.ok) {
+                handleCloseModal();
+                document.getElementById("titleInput").value = "";
+                document.getElementById("descInput").value = "";
+                document.getElementById("deadlineInput").value = "";
+                document.getElementById("statusInput").value = "";
+                document.getElementById("tagInput").value = "";
+                document.getElementById("assignedToInput").value = "";
+                console.log("Navigating")
+                // navigate(`/adminTasks/${id}`)
+            } else {
+                console.error("Add task failed");
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+
+    const editTaskHandler = () => {
         // Implement the logic to edit the task here
     };
 
@@ -91,35 +157,35 @@ function AdminTasks() {
                     Tasks
                 </Typography>
                 <Paper style={{ width: '100%' }}>
-                <TableContainer component={Paper}>
-                    <Table aria-label="simple table" style={{ width: '100%' }}>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Title</TableCell>
-                                <TableCell>Deadline</TableCell>
-                                <TableCell>Status</TableCell>
-                                <TableCell>Created By</TableCell>
-                                <TableCell>Tag</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {Array.isArray(taskData) && taskData.length > 0 ? (
-                                taskData.map((task) => (
-                                    <TableRow key={task.id} onClick={handleEditOpenModal}>
-                                        <TableCell>{task.title}</TableCell>
-                                        <TableCell>{task.deadline}</TableCell>
-                                        <TableCell>{task.status}</TableCell>
-                                        <TableCell>{task.assigned_by}</TableCell>
-                                        <TableCell>{task.tag}</TableCell>
-                                    </TableRow>
-                                ))) : (
+                    <TableContainer component={Paper}>
+                        <Table aria-label="simple table" style={{ width: '100%' }}>
+                            <TableHead>
                                 <TableRow>
-                                    <TableCell>No tasks found.</TableCell>
+                                    <TableCell>Title</TableCell>
+                                    <TableCell>Deadline</TableCell>
+                                    <TableCell>Status</TableCell>
+                                    <TableCell>Created By</TableCell>
+                                    <TableCell>Tag</TableCell>
                                 </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                            </TableHead>
+                            <TableBody>
+                                {Array.isArray(taskData) && taskData.length > 0 ? (
+                                    taskData.map((task) => (
+                                        <TableRow key={task.id} onClick={handleEditOpenModal}>
+                                            <TableCell>{task.title}</TableCell>
+                                            <TableCell>{task.deadline}</TableCell>
+                                            <TableCell>{task.status}</TableCell>
+                                            <TableCell>{task.assigned_by}</TableCell>
+                                            <TableCell>{task.tag}</TableCell>
+                                        </TableRow>
+                                    ))) : (
+                                    <TableRow>
+                                        <TableCell>No tasks found.</TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
                 </Paper>
                 <Button
                     variant="contained"
@@ -138,12 +204,15 @@ function AdminTasks() {
                         <Typography variant="h6">Add Task</Typography>
                         <TextField
                             label="Title"
+                            id="titleInput"
                             variant="outlined"
                             fullWidth
+                            required
                             margin="normal"
                         />
                         <TextField
                             label="Description"
+                            id="descInput"
                             variant="outlined"
                             fullWidth
                             margin="normal"
@@ -152,17 +221,33 @@ function AdminTasks() {
                         />
                         <TextField
                             label="Deadline"
+                            id="deadlineInput"
                             type="date"
                             variant="outlined"
                             fullWidth
+                            required
                             margin="normal"
                             InputLabelProps={{
                                 shrink: true,
                             }}
                         />
+                        <TextField
+                            label="Assign To"
+                            id="assignedToInput"
+                            variant="outlined"
+                            type="number"
+                            fullWidth
+                            required
+                            margin="normal"
+                        />
                         <FormControl variant="outlined" fullWidth margin="normal">
                             <Typography>Status</Typography>
-                            <Select label="Status">
+                            <Select label="Status"
+                                id="statusInput"
+                                required
+                                value={statusValue}
+                                onChange={(e) => setStatusValue(e.target.value)}
+                            >
                                 <MenuItem value="Assigned">Assigned</MenuItem>
                                 <MenuItem value="In Progress">In Progress</MenuItem>
                                 <MenuItem value="Done">Done</MenuItem>
@@ -170,6 +255,7 @@ function AdminTasks() {
                         </FormControl>
                         <TextField
                             label="Tag"
+                            id="tagInput"
                             variant="outlined"
                             fullWidth
                             margin="normal"
@@ -177,7 +263,7 @@ function AdminTasks() {
                         <Button
                             variant="contained"
                             color="primary"
-                            onClick={handleCloseModal}
+                            onClick={addTaskHandler}
                             style={{ marginTop: '16px' }}
                         >
                             Add Task

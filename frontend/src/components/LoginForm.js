@@ -37,9 +37,11 @@ function LoginForm() {
         if (data.success) {
             console.log('Login successful');
             console.log("Admin or not", isAdmin)
-            if (isAdmin === 1) {
+            if (isAdmin == 1) {
                 console.log("Navigating to admin")
-                navigate('/admin')
+                const adminId = data.idUser;
+                console.log("Admin id (from login form)", adminId)
+                navigate(`/admin/${adminId}`)
             }
             else {
                 console.log("Navigating to user")

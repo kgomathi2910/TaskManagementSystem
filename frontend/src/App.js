@@ -16,13 +16,13 @@ function App() {
         <Routes>
           <Route path="/signup" element={<SignupForm />} />
           <Route path="/login" element={<LoginForm />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/:id" element={<Admin />} />
           <Route path="/user" element={<User />} />
 
-          <Route path="/adminDashboard" element={<AdminDashboard />} />
-          <Route path="/adminTasks" element={<AdminTasks />} />
-          <Route path="/manageUsers" element={<ManageUsers />} />
-          <Route path="/adminProfile" element={<AdminProfile />} />
+          <Route path="/adminDashboard/:id" element={<AdminDashboard />} />
+          <Route path="/adminTasks/:id" element={<AdminTasks />} />
+          <Route path="/manageUsers/:id" element={<ManageUsers />} />
+          <Route path="/adminProfile/:id" element={<AdminProfile />} />
 
           <Route path="/" element={<SignupForm />} />
         </Routes>
