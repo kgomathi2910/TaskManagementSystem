@@ -21,6 +21,7 @@ import {
 function AdminTasks() {
     const [taskData, setTaskData] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     const handleOpenModal = () => {
         setIsModalOpen(true);
@@ -29,6 +30,15 @@ function AdminTasks() {
     const handleCloseModal = () => {
         setIsModalOpen(false);
     };
+
+    const handleEditOpenModal = () => {
+        setIsEditModalOpen(true);
+    };
+
+    const handleEditCloseModal = () => {
+        setIsEditModalOpen(false);
+    };
+
 
     const style = {
         position: 'absolute',
@@ -47,7 +57,7 @@ function AdminTasks() {
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        width: 1000,
+        width: 900,
         bgcolor: 'background.paper',
         border: '2px solid #000',
         boxShadow: 24,
@@ -90,27 +100,17 @@ function AdminTasks() {
                                 <TableCell>Status</TableCell>
                                 <TableCell>Created By</TableCell>
                                 <TableCell>Tag</TableCell>
-                                <TableCell>Do changes</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {Array.isArray(taskData) && taskData.length > 0 ? (
                                 taskData.map((task) => (
-                                    <TableRow key={task.id}>
+                                    <TableRow key={task.id} onClick={handleEditOpenModal}>
                                         <TableCell>{task.title}</TableCell>
                                         <TableCell>{task.deadline}</TableCell>
                                         <TableCell>{task.status}</TableCell>
                                         <TableCell>{task.assigned_by}</TableCell>
                                         <TableCell>{task.tag}</TableCell>
-                                        <TableCell>
-                                            <Button
-                                                variant="contained"
-                                                color="primary"
-                                                onClick={handleEditTask}
-                                            >
-                                                Save Changes
-                                            </Button>
-                                        </TableCell>
                                     </TableRow>
                                 ))) : (
                                 <TableRow>
@@ -130,6 +130,8 @@ function AdminTasks() {
                     Add Task
                 </Button>
             </Box>
+
+            {/* Add task */}
             <Modal open={isModalOpen} onClose={handleCloseModal}>
                 <Box sx={style}>
                     <div>
@@ -183,6 +185,64 @@ function AdminTasks() {
                     </div>
                 </Box>
             </Modal>
+
+
+
+            <Modal open={isEditModalOpen} onClose={handleEditCloseModal}>
+                <Box sx={style}>
+                    <div>
+                        <Typography variant="h6">Edit Task</Typography>
+                        <TextField
+                            label="Title"
+                            variant="outlined"
+                            fullWidth
+                            margin="normal"
+                        />
+                        <TextField
+                            label="Description"
+                            variant="outlined"
+                            fullWidth
+                            margin="normal"
+                            multiline
+                            rows={4}
+                        />
+                        <TextField
+                            label="Deadline"
+                            type="date"
+                            variant="outlined"
+                            fullWidth
+                            margin="normal"
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                        />
+                        <FormControl variant="outlined" fullWidth margin="normal">
+                            <Typography>Status</Typography>
+                            <Select label="Status">
+                                <MenuItem value="Assigned">Assigned</MenuItem>
+                                <MenuItem value="In Progress">In Progress</MenuItem>
+                                <MenuItem value="Done">Done</MenuItem>
+                            </Select>
+                        </FormControl>
+                        <TextField
+                            label="Tag"
+                            variant="outlined"
+                            fullWidth
+                            margin="normal"
+                        />
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleEditCloseModal}
+                            style={{ marginTop: '16px' }}
+                        >
+                            Edit Task
+                        </Button>
+                    </div>
+                </Box>
+            </Modal>
+
+
         </React.Fragment>
     );
 }
