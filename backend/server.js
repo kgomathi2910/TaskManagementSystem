@@ -145,6 +145,43 @@ app.post('/addTask', async (req, res) => {
     }
 }) 
 
+
+app.put('/updateTask/:taskId', async (req, res) => {
+    try {
+      const { taskId } = req.params;
+      const { title, description, deadline, assigned_to, status, tag } = req.body;
+  
+      // Check if the task with the given taskId exists
+      db.query('SELECT * FROM tasks WHERE id = ?', [taskId], async (error, results) => {
+        if (error) {
+          console.error(error);
+          return res.status(500).json({ success: false, message: 'Error' });
+        }
+  
+        if (results.length === 0) {
+          return res.status(404).json({ success: false, message: 'Task not found' });
+        }
+  
+        // Update the task data
+        db.query(
+          'UPDATE tasks SET title = ?, description = ?, deadline = ?, assigned_to = ?, status = ?, tag = ? WHERE id = ?',
+          [title, description, deadline, assigned_to, status, tag, taskId],
+          (updateError) => {
+            if (updateError) {
+              console.error(updateError);
+              return res.status(500).json({ success: false, message: 'Internal server error' });
+            }
+  
+            return res.status(200).json({ success: true, message: 'Task updated' });
+          }
+        );
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+  });
+  
 app.listen(8081, () => {
     console.log(`Server is running on port 8081`);
 });

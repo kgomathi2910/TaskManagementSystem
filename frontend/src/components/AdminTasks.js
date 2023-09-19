@@ -21,12 +21,15 @@ import {
 } from '@mui/material';
 
 function AdminTasks() {
-    const [taskData, setTaskData] = useState([]);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [taskData, setTaskData] = useState([]); // contains all tasks in the system
+    const [isModalOpen, setIsModalOpen] = useState(false); // modal for Add Task
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false); // modal for Edit Task
+    const [statusValue, setStatusValue] = useState('');
+
+    const [taskEdit, setTaskEdit] = useState({}); // Store the task being edited
+
     const { id } = useParams();
     console.log("Admin ID from admin tasks", id)
-    const [statusValue, setStatusValue] = useState('');
     const navigate = useNavigate();
 
     const handleOpenModal = () => {
@@ -37,11 +40,14 @@ function AdminTasks() {
         setIsModalOpen(false);
     };
 
-    const handleEditOpenModal = () => {
+    const handleEditOpenModal = (task) => {
+        console.log("task to be editted: ", task)
+        setTaskEdit(task); // in order to keep track of the task being editted
         setIsEditModalOpen(true);
     };
 
     const handleEditCloseModal = () => {
+        setTaskEdit(null); // erase the data in the task to be editted
         setIsEditModalOpen(false);
     };
 
@@ -145,8 +151,44 @@ function AdminTasks() {
     };
 
 
-    const editTaskHandler = () => {
-        // Implement the logic to edit the task here
+    const editTaskHandler = async () => {
+        try {
+            if (!taskEdit) {
+                console.error('No task selected for editing');
+                return;
+            }
+
+            const { id, title, description, deadline, assigned_to, status, tag } = taskEdit;
+
+            // for MySQL compatibility
+            const modifiedDeadline = new Date(deadline).toISOString().split('T')[0];
+
+            const edittedTask = {
+                title,
+                description,
+                deadline: modifiedDeadline,
+                assigned_to,
+                status,
+                tag,
+            };
+
+            const response = await fetch(`http://localhost:8081/updateTask/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(edittedTask),
+            });
+
+            if (response.ok) {
+                handleEditCloseModal();
+                // Optionally, update the taskData state to reflect the changes in the table
+            } else {
+                console.error('Edit task failed');
+            }
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     return (
@@ -171,7 +213,7 @@ function AdminTasks() {
                             <TableBody>
                                 {Array.isArray(taskData) && taskData.length > 0 ? (
                                     taskData.map((task) => (
-                                        <TableRow key={task.id} onClick={handleEditOpenModal}>
+                                        <TableRow key={task.id} onClick={() => handleEditOpenModal(task)}>
                                             <TableCell>{task.title}</TableCell>
                                             <TableCell>{task.deadline}</TableCell>
                                             <TableCell>{task.status}</TableCell>
@@ -283,6 +325,13 @@ function AdminTasks() {
                             variant="outlined"
                             fullWidth
                             margin="normal"
+                            value={taskEdit?.title || ''}
+                            onChange={(e) =>
+                                setTaskEdit({
+                                    ...taskEdit,
+                                    title: e.target.value,
+                                })
+                            }
                         />
                         <TextField
                             label="Description"
@@ -291,6 +340,13 @@ function AdminTasks() {
                             margin="normal"
                             multiline
                             rows={4}
+                            value={taskEdit?.description || ''}
+                            onChange={(e) =>
+                                setTaskEdit({
+                                    ...taskEdit,
+                                    description: e.target.value,
+                                })
+                            }
                         />
                         <TextField
                             label="Deadline"
@@ -301,10 +357,48 @@ function AdminTasks() {
                             InputLabelProps={{
                                 shrink: true,
                             }}
+                            // value={taskEdit?.deadline || ''}
+                            // onChange={(e) =>
+                            //     setTaskEdit({
+                            //         ...taskEdit,
+                            //         deadline: e.target.value,
+                            //     })
+                            // }
+                            value={taskEdit?.deadline ? taskEdit.deadline.split('T')[0] : ''}
+                            onChange={(e) =>
+                                setTaskEdit({
+                                    ...taskEdit,
+                                    deadline: e.target.value + 'T18:30:00.000Z', // Assuming the time is always '18:30:00.000Z'
+                                })
+                            }
+                        />
+                        <TextField
+                            label="Assign To"
+                            variant="outlined"
+                            type="number"
+                            fullWidth
+                            required
+                            margin="normal"
+                            value={taskEdit?.assigned_to || ''}
+                            onChange={(e) =>
+                                setTaskEdit({
+                                    ...taskEdit,
+                                    assigned_to: e.target.value,
+                                })
+                            }
                         />
                         <FormControl variant="outlined" fullWidth margin="normal">
                             <Typography>Status</Typography>
-                            <Select label="Status">
+                            <Select label="Status"
+                                required
+                                value={taskEdit?.status || ''}
+                                onChange={(e) =>
+                                    setTaskEdit({
+                                        ...taskEdit,
+                                        status: e.target.value,
+                                    })
+                                }
+                            >
                                 <MenuItem value="Assigned">Assigned</MenuItem>
                                 <MenuItem value="In Progress">In Progress</MenuItem>
                                 <MenuItem value="Done">Done</MenuItem>
@@ -315,11 +409,18 @@ function AdminTasks() {
                             variant="outlined"
                             fullWidth
                             margin="normal"
+                            value={taskEdit?.tag || ''}
+                            onChange={(e) =>
+                                setTaskEdit({
+                                    ...taskEdit,
+                                    tag: e.target.value,
+                                })
+                            }
                         />
                         <Button
                             variant="contained"
                             color="primary"
-                            onClick={handleEditCloseModal}
+                            onClick={editTaskHandler}
                             style={{ marginTop: '16px' }}
                         >
                             Edit Task
