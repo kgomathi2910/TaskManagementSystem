@@ -193,7 +193,7 @@ function AdminTasks() {
 
     return (
         <React.Fragment>
-            <AdminSideNav />
+            <AdminSideNav id={id} />
             <Box sx={sty}>
                 <Typography variant="h5">
                     Tasks

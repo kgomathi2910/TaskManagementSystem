@@ -182,6 +182,62 @@ app.put('/updateTask/:taskId', async (req, res) => {
     }
   });
   
+
+
+  app.get('/getUser/:id', async (req, res) => {
+    const { id } = req.params;
+    db.query('SELECT * FROM users WHERE id = ?', [id], async (error, results) => {
+        if (error) {
+            console.error(error);
+            return res.status(500).json({ success: false, message: 'Internal server error' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ success: false, message: 'No user found' });
+        }
+
+        res.status(200).json({ success: true, users: results });
+    });
+});
+
+
+app.put('/updateUser/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { username, password, email } = req.body;
+  
+      db.query('SELECT * FROM users WHERE id = ?', [id], async (error, results) => {
+        if (error) {
+          console.error(error);
+          return res.status(500).json({ success: false, message: 'Error' });
+        }
+  
+        if (results.length === 0) {
+          return res.status(404).json({ success: false, message: 'User not found' });
+        }
+  
+        const hashedPassword = await bcrypt.hash(password, 10);
+        // Update the user data
+        db.query(
+          'UPDATE users SET username = ?, password = ?, email = ? WHERE id = ?',
+          [username, hashedPassword, email, id],
+          (updateError) => {
+            if (updateError) {
+              console.error(updateError);
+              return res.status(500).json({ success: false, message: 'Internal server error' });
+            }
+  
+            return res.status(200).json({ success: true, message: 'User updated' });
+          }
+        );
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+  });
+  
+
 app.listen(8081, () => {
     console.log(`Server is running on port 8081`);
 });
