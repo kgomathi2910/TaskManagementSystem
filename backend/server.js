@@ -238,6 +238,102 @@ app.put('/updateUser/:id', async (req, res) => {
   });
   
 
+////
+
+  app.get('/getUsers', (req, res) => {
+    db.query('SELECT * FROM users', (err, results) => {
+        if (err) {
+            console.error('Error fetching users:', err);
+            res.status(500).json({ error: 'Internal server error' });
+        } else {
+            res.json({ users: results });
+        }
+    });
+});
+
+app.put('/updateAdminStatus/:userId', (req, res) => {
+    const userId = req.params.userId;
+    const { isAdmin } = req.body;
+    // Update the admin status in the database
+    db.query(
+        'UPDATE users SET is_admin = ? WHERE id = ?',
+        [isAdmin, userId],
+        (err, result) => {
+            if (err) {
+                console.error('Error updating admin status:', err);
+                res.status(500).json({ error: 'Internal server error' });
+            } else {
+                res.json({ message: 'Admin status updated successfully' });
+            }
+        }
+    );
+});
+
+app.get('/getTaskCounts/:userId', (req, res) => {
+    const userId = req.params.userId;
+
+    // Define an object to store task counts
+    const taskCounts = {
+        assigned: 0,
+        inProgress: 0,
+        done: 0,
+    };
+
+    // Fetch the count of tasks with different statuses for the specified user
+    // Use MySQL queries to get the counts
+    db.query(
+        'SELECT COUNT(*) AS assigned FROM tasks WHERE assigned_to = ? AND status = "Assigned"',
+        [userId],
+        (err, results) => {
+            if (err) {
+                console.error('Error fetching assigned task count:', err);
+                res.status(500).json({ error: 'Internal server error' });
+                return;
+            }
+            console.log("User: ", userId);
+            console.log("Assigned: ", results[0].assigned);
+            taskCounts.assigned = results[0].assigned;
+
+            // Fetch the count of tasks in progress
+            db.query(
+                'SELECT COUNT(*) AS inProgress FROM tasks WHERE assigned_to = ? AND status = "In Progress"',
+                [userId],
+                (err, results) => {
+                    if (err) {
+                        console.error('Error fetching in-progress task count:', err);
+                        res.status(500).json({ error: 'Internal server error' });
+                        return;
+                    }
+                    console.log("User: ", userId);
+                    console.log("In Progress: ", results[0].inProgress);
+                    taskCounts.inProgress = results[0].inProgress;
+
+                    // Fetch the count of tasks marked as done
+                    db.query(
+                        'SELECT COUNT(*) AS done FROM tasks WHERE assigned_to = ? AND status = "Done"',
+                        [userId],
+                        (err, results) => {
+                            if (err) {
+                                console.error('Error fetching done task count:', err);
+                                res.status(500).json({ error: 'Internal server error' });
+                                return;
+                            }
+                            console.log("User: ", userId);
+                            console.log("Done: ", results[0].done);
+                            taskCounts.done = results[0].done;
+
+                            console.log("Task counts: ", taskCounts);
+                            // Send the task counts as a JSON response
+                            res.json(taskCounts);
+                        }
+                    );
+                }
+            );
+        }
+    );
+});
+
+
 app.listen(8081, () => {
     console.log(`Server is running on port 8081`);
 });

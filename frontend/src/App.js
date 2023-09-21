@@ -9,9 +9,12 @@ import AdminTasks from './components/AdminTasks';
 import ManageUsers from './components/ManageUsers';
 import AdminProfile from './components/AdminProfile';
 
+import { Provider } from 'react-redux';
+import store from './store/store';
+
 function App() {
   return (
-    <>
+    <Provider store={store}>
       <div className="App">
         <Routes>
           <Route path="/signup" element={<SignupForm />} />
@@ -27,7 +30,7 @@ function App() {
           <Route path="/" element={<SignupForm />} />
         </Routes>
       </div>
-    </>
+    </Provider>
   );
 }
 
