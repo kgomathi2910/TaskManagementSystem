@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
 import { useParams } from "react-router";
-import AdminSideNav from './AdminSideNav';
+import UserSideNav from './UserSideNav';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom"
 import {
     Typography,
@@ -20,25 +20,15 @@ import {
     Paper
 } from '@mui/material';
 
-function AdminTasks() {
-    const [taskData, setTaskData] = useState([]); // contains all tasks in the system
-    const [isModalOpen, setIsModalOpen] = useState(false); // modal for Add Task
+function UserTasks() {
+    const { id } = useParams();
+    console.log("User id from (User.js)", id)
+    const [taskData, setTaskData] = useState([]); // contains all tasks of a user in the system
     const [isEditModalOpen, setIsEditModalOpen] = useState(false); // modal for Edit Task
     const [statusValue, setStatusValue] = useState('');
-
     const [taskEdit, setTaskEdit] = useState({}); // Store the task being edited
 
-    const { id } = useParams();
-    console.log("Admin ID from admin tasks", id)
     const navigate = useNavigate();
-
-    const handleOpenModal = () => {
-        setIsModalOpen(true);
-    };
-
-    const handleCloseModal = () => {
-        setIsModalOpen(false);
-    };
 
     const handleEditOpenModal = (task) => {
         console.log("task to be editted: ", task)
@@ -50,7 +40,6 @@ function AdminTasks() {
         setTaskEdit(null); // erase the data in the task to be editted
         setIsEditModalOpen(false);
     };
-
 
     const style = {
         position: 'absolute',
@@ -76,10 +65,9 @@ function AdminTasks() {
         p: 4,
     };
 
-
     useEffect(() => {
         const getTaskData = async () => {
-            const reqData = await fetch('http://localhost:8081/getTasks');
+            const reqData = await fetch(`http://localhost:8081/getTask/${id}`);
             const resData = await reqData.json();
             console.log("ResData: ", resData);
             setTaskData(resData.tasks);
@@ -91,65 +79,6 @@ function AdminTasks() {
     useEffect(() => {
         console.log("TaskData has changed:", taskData);
     }, [taskData]);
-
-
-
-    const addTaskHandler = async () => {
-        try {
-            const title = document.getElementById("titleInput").value;
-            const description = document.getElementById("descInput").value;
-            const deadline = document.getElementById("deadlineInput").value;
-            // const status = document.getElementById("statusInput").value;
-            const status = statusValue;
-            const tag = document.getElementById("tagInput").value;
-            const assignTo = document.getElementById("assignedToInput").value;
-
-            if (id === undefined) {
-                console.error("adminId is undefined");
-                return;
-            }
-
-            const assignBy = id;
-
-            console.log("Status: ", status)
-
-            const newTask = {
-                title,
-                description,
-                status,
-                deadline,
-                assignBy,
-                assignTo,
-                tag
-            };
-            console.log("new task", newTask);
-
-            const response = await fetch("http://localhost:8081/addTask", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(newTask),
-            });
-
-            if (response.ok) {
-                handleCloseModal();
-                document.getElementById("titleInput").value = "";
-                document.getElementById("descInput").value = "";
-                document.getElementById("deadlineInput").value = "";
-                document.getElementById("statusInput").value = "";
-                document.getElementById("tagInput").value = "";
-                document.getElementById("assignedToInput").value = "";
-                console.log("Navigating")
-                // navigate(`/adminTasks/${id}`)
-            } else {
-                console.error("Add task failed");
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
 
     const editTaskHandler = async () => {
         try {
@@ -192,7 +121,7 @@ function AdminTasks() {
 
     return (
         <React.Fragment>
-            <AdminSideNav id={id} />
+            <UserSideNav id={id} />
             <Box sx={sty}>
                 <Typography variant="h5">
                     Tasks
@@ -221,99 +150,16 @@ function AdminTasks() {
                                         </TableRow>
                                     ))) : (
                                     <TableRow>
-                                        <TableCell>No tasks found</TableCell>
+                                        <TableCell>No tasks found.</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
                         </Table>
                     </TableContainer>
                 </Paper>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleOpenModal}
-                    style={{ marginTop: '16px' }}
-                >
-                    Add Task
-                </Button>
                 <br />
-                <Typography>Refresh the page to see the changes made through 'Edit task'</Typography>
+                <Typography>Refresh the page to see the changes</Typography>
             </Box>
-
-            {/* Add task */}
-            <Modal open={isModalOpen} onClose={handleCloseModal}>
-                <Box sx={style}>
-                    <div>
-                        <Typography variant="h6">Add Task</Typography>
-                        <TextField
-                            label="Title"
-                            id="titleInput"
-                            variant="outlined"
-                            fullWidth
-                            required
-                            margin="normal"
-                        />
-                        <TextField
-                            label="Description"
-                            id="descInput"
-                            variant="outlined"
-                            fullWidth
-                            margin="normal"
-                            multiline
-                            rows={4}
-                        />
-                        <TextField
-                            label="Deadline"
-                            id="deadlineInput"
-                            type="date"
-                            variant="outlined"
-                            fullWidth
-                            required
-                            margin="normal"
-                            InputLabelProps={{
-                                shrink: true,
-                            }}
-                        />
-                        <TextField
-                            label="Assign To"
-                            id="assignedToInput"
-                            variant="outlined"
-                            type="number"
-                            fullWidth
-                            required
-                            margin="normal"
-                        />
-                        <FormControl variant="outlined" fullWidth margin="normal">
-                            <Typography>Status</Typography>
-                            <Select label="Status"
-                                id="statusInput"
-                                required
-                                value={statusValue}
-                                onChange={(e) => setStatusValue(e.target.value)}
-                            >
-                                <MenuItem value="Assigned">Assigned</MenuItem>
-                                <MenuItem value="In Progress">In Progress</MenuItem>
-                                <MenuItem value="Done">Done</MenuItem>
-                            </Select>
-                        </FormControl>
-                        <TextField
-                            label="Tag"
-                            id="tagInput"
-                            variant="outlined"
-                            fullWidth
-                            margin="normal"
-                        />
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={addTaskHandler}
-                            style={{ marginTop: '16px' }}
-                        >
-                            Add Task
-                        </Button>
-                    </div>
-                </Box>
-            </Modal>
 
 
 
@@ -327,12 +173,7 @@ function AdminTasks() {
                             fullWidth
                             margin="normal"
                             value={taskEdit?.title || ''}
-                            onChange={(e) =>
-                                setTaskEdit({
-                                    ...taskEdit,
-                                    title: e.target.value,
-                                })
-                            }
+                            disabled
                         />
                         <TextField
                             label="Description"
@@ -342,12 +183,7 @@ function AdminTasks() {
                             multiline
                             rows={4}
                             value={taskEdit?.description || ''}
-                            onChange={(e) =>
-                                setTaskEdit({
-                                    ...taskEdit,
-                                    description: e.target.value,
-                                })
-                            }
+                            disabled
                         />
                         <TextField
                             label="Deadline"
@@ -358,20 +194,8 @@ function AdminTasks() {
                             InputLabelProps={{
                                 shrink: true,
                             }}
-                            // value={taskEdit?.deadline || ''}
-                            // onChange={(e) =>
-                            //     setTaskEdit({
-                            //         ...taskEdit,
-                            //         deadline: e.target.value,
-                            //     })
-                            // }
                             value={taskEdit?.deadline ? taskEdit.deadline.split('T')[0] : ''}
-                            onChange={(e) =>
-                                setTaskEdit({
-                                    ...taskEdit,
-                                    deadline: e.target.value + 'T18:30:00.000Z', // Assuming the time is always '18:30:00.000Z'
-                                })
-                            }
+                            disabled
                         />
                         <TextField
                             label="Assign To"
@@ -381,12 +205,7 @@ function AdminTasks() {
                             required
                             margin="normal"
                             value={taskEdit?.assigned_to || ''}
-                            onChange={(e) =>
-                                setTaskEdit({
-                                    ...taskEdit,
-                                    assigned_to: e.target.value,
-                                })
-                            }
+                            disabled
                         />
                         <FormControl variant="outlined" fullWidth margin="normal">
                             <Typography>Status</Typography>
@@ -411,12 +230,7 @@ function AdminTasks() {
                             fullWidth
                             margin="normal"
                             value={taskEdit?.tag || ''}
-                            onChange={(e) =>
-                                setTaskEdit({
-                                    ...taskEdit,
-                                    tag: e.target.value,
-                                })
-                            }
+                            disabled
                         />
                         <Button
                             variant="contained"
@@ -432,7 +246,7 @@ function AdminTasks() {
 
 
         </React.Fragment>
-    );
+    )
 }
 
-export default AdminTasks;
+export default UserTasks;

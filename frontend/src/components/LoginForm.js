@@ -45,7 +45,9 @@ function LoginForm() {
             }
             else {
                 console.log("Navigating to user")
-                navigate('/user')
+                const id = data.idUser;
+                console.log("User id (from login form)", id);
+                navigate(`/user/${id}`)
             }
         } else {
             console.error('Login failed:', data.message);

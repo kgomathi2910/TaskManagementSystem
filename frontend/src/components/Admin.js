@@ -1,4 +1,3 @@
-import { Typography } from "@mui/material";
 import AdminSideNav from "./AdminSideNav";
 import { useParams } from "react-router";
 
@@ -7,8 +6,8 @@ function Admin() {
     console.log("Admin id from (Admin.js)", id)
     return (
         <>
-        <Typography>Admin Page</Typography>
-        <AdminSideNav id={id}/>
+            <h1>Welcome to the Admin Page</h1>
+            <AdminSideNav id={id} />
         </>
     )
 }

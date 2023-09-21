@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import AdminSideNav from './AdminSideNav';
-import { Typography } from '@mui/material';
 import { useParams } from "react-router";
+import UserSideNav from './UserSideNav';
+import React, { useEffect, useState } from 'react';
+import { Typography } from '@mui/material';
 import { Pie } from 'react-chartjs-2';
 import 'chart.js/auto';
 import { Paper } from '@mui/material';
 
-function AdminDashboard() {
+function UserDashboard() {
     const { id } = useParams();
+    console.log("User id from (User.js)", id)
     const [chartData, setChartData] = useState({});
 
     const centerStyles = {
@@ -18,7 +19,7 @@ function AdminDashboard() {
     };
 
     useEffect(() => {
-        fetch('http://localhost:8081/allTaskDist')
+        fetch(`http://localhost:8081/taskDist/${id}`)
             .then((response) => response.json())
             .then((data) => {
                 if (!data || data.length === 0) {
@@ -48,7 +49,7 @@ function AdminDashboard() {
     }, []);
     return (
         <div>
-            <AdminSideNav id={id} />
+            <UserSideNav id={id} />
             <Typography variant="h5">Dashboard</Typography>
             <div style={centerStyles}>
                 <Paper>
@@ -66,4 +67,4 @@ function AdminDashboard() {
     );
 }
 
-export default AdminDashboard;
+export default UserDashboard;

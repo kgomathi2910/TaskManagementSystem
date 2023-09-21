@@ -116,6 +116,25 @@ app.get('/getTasks', async (req, res) => {
 });
 
 
+// Get tasks assigned to a particular user
+app.get('/getTask/:id', async (req, res) => {
+    const { id } = req.params;
+    db.query('SELECT * FROM tasks WHERE assigned_to = ?', [id], async (error, results) => {
+        if (error) {
+            console.error(error);
+            return res.status(500).json({ success: false, message: 'Internal server error' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ success: false, message: 'No tasks found' });
+        }
+
+        res.status(200).json({ success: true, tasks: results });
+    });
+});
+
+
+
 
 // add a new task
 app.post('/addTask', async (req, res) => {
@@ -339,10 +358,26 @@ app.get('/getTaskCounts/:userId', (req, res) => {
 });
 
 
-// get the count of tasks, grouped by each status
-app.get('/taskDist', (req, res) => {
+// get the count of all tasks in the system, grouped by each status
+app.get('/allTaskDist', (req, res) => {
     db.query(
         'SELECT status, COUNT(*) AS count FROM tasks GROUP BY status',
+        (err, results) => {
+            if (err) {
+                console.error('Error:', err);
+                res.status(500).json({ error: 'Internal server error' });
+            } else {
+                res.json(results);
+            }
+        }
+    );
+});
+
+// get the count of all tasks assigned to a userin the system, grouped by each status
+app.get('/taskDist/:id', (req, res) => {
+    const id = req.params.id;
+    db.query(
+        'SELECT status, COUNT(*) AS count FROM tasks WHERE assigned_to = ? GROUP BY status', [id],
         (err, results) => {
             if (err) {
                 console.error('Error:', err);
