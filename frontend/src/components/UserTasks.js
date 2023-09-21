@@ -17,7 +17,8 @@ import {
     Select,
     MenuItem,
     Box,
-    Paper
+    Paper,
+    TablePagination
 } from '@mui/material';
 
 function UserTasks() {
@@ -119,6 +120,19 @@ function UserTasks() {
         }
     };
 
+    // Pagination
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
+
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 5));
+        setPage(0);
+    };
+
     return (
         <React.Fragment>
             <UserSideNav id={id} />
@@ -140,7 +154,9 @@ function UserTasks() {
                             </TableHead>
                             <TableBody>
                                 {Array.isArray(taskData) && taskData.length > 0 ? (
-                                    taskData.map((task) => (
+                                    taskData
+                                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                    .map((task) => (
                                         <TableRow key={task.id} onClick={() => handleEditOpenModal(task)}>
                                             <TableCell>{task.title}</TableCell>
                                             <TableCell>{task.deadline}</TableCell>
@@ -157,6 +173,15 @@ function UserTasks() {
                         </Table>
                     </TableContainer>
                 </Paper>
+                <TablePagination 
+                    rowsPerPageOptions={[5, 10, 20]} 
+                    component="div"
+                    count={taskData.length} // Total number of rows
+                    page={page}
+                    onPageChange={handleChangePage}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                />
                 <br />
                 <Typography>Refresh the page to see the changes</Typography>
             </Box>

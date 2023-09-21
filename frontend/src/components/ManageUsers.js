@@ -1,4 +1,4 @@
-import React from 'react';
+import { React, useState } from 'react';
 import AdminSideNav from './AdminSideNav';
 import { useParams } from "react-router";
 
@@ -16,7 +16,8 @@ import {
     TableCell,
     Button,
     Box,
-    Paper
+    Paper,
+    TablePagination
 } from '@mui/material';
 
 function ManageUsers() {
@@ -44,6 +45,20 @@ function ManageUsers() {
         dispatch(changeAdminStatusAction(id, isAdmin)); // call redux action
     };
 
+
+    // Pagination
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
+
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 5));
+        setPage(0);
+    };
+
     return (
         <div>
             <AdminSideNav id={id} />
@@ -62,7 +77,9 @@ function ManageUsers() {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {users.map((user) => (
+                            {users
+                            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) // for pagination
+                            .map((user) => (
                                 <TableRow key={user.id}>
                                     <TableCell>{user.username}</TableCell>
                                     <TableCell>{user.email}</TableCell>
@@ -84,6 +101,15 @@ function ManageUsers() {
                         </TableBody>
                     </Table>
                 </TableContainer>
+                <TablePagination 
+                    rowsPerPageOptions={[5, 10, 20]} 
+                    component="div"
+                    count={users.length} // Total number of rows
+                    page={page}
+                    onPageChange={handleChangePage}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                />
                 <br />
                 <Typography>Refresh the page to see the changes</Typography>
             </Box>
