@@ -24,6 +24,9 @@ function AdminSideNav({ id }) {
         <ListItem component={Link} to={`/adminProfile/${id}`}>
           <ListItemText primary="Profile" />
         </ListItem>
+        <ListItem component={Link} to={`/login`}>
+          <ListItemText primary="Logout"/>
+        </ListItem>
       </List>
     </Drawer>
   );

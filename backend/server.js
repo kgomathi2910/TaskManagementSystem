@@ -98,6 +98,8 @@ app.post('/signup', async (req, res) => {
 });
 
 
+
+// Get all tasks in the system
 app.get('/getTasks', async (req, res) => {
     db.query('SELECT * FROM tasks', async (error, results) => {
         if (error) {
@@ -114,6 +116,8 @@ app.get('/getTasks', async (req, res) => {
 });
 
 
+
+// add a new task
 app.post('/addTask', async (req, res) => {
     try {
         console.log("New task from backend: ", req.body);
@@ -146,6 +150,8 @@ app.post('/addTask', async (req, res) => {
 }) 
 
 
+
+// update a task
 app.put('/updateTask/:taskId', async (req, res) => {
     try {
       const { taskId } = req.params;
@@ -184,6 +190,7 @@ app.put('/updateTask/:taskId', async (req, res) => {
   
 
 
+// get the data of a particular user
   app.get('/getUser/:id', async (req, res) => {
     const { id } = req.params;
     db.query('SELECT * FROM users WHERE id = ?', [id], async (error, results) => {
@@ -201,6 +208,8 @@ app.put('/updateTask/:taskId', async (req, res) => {
 });
 
 
+
+// update the data of a particular user
 app.put('/updateUser/:id', async (req, res) => {
     try {
       const { id } = req.params;
@@ -217,7 +226,6 @@ app.put('/updateUser/:id', async (req, res) => {
         }
   
         const hashedPassword = await bcrypt.hash(password, 10);
-        // Update the user data
         db.query(
           'UPDATE users SET username = ?, password = ?, email = ? WHERE id = ?',
           [username, hashedPassword, email, id],
@@ -238,8 +246,8 @@ app.put('/updateUser/:id', async (req, res) => {
   });
   
 
-////
 
+// get all user data
   app.get('/getUsers', (req, res) => {
     db.query('SELECT * FROM users', (err, results) => {
         if (err) {
@@ -251,14 +259,15 @@ app.put('/updateUser/:id', async (req, res) => {
     });
 });
 
+
+// helps to promote or demote a user
 app.put('/updateAdminStatus/:userId', (req, res) => {
     const userId = req.params.userId;
     const { isAdmin } = req.body;
-    // Update the admin status in the database
     db.query(
         'UPDATE users SET is_admin = ? WHERE id = ?',
         [isAdmin, userId],
-        (err, result) => {
+        (err, results) => {
             if (err) {
                 console.error('Error updating admin status:', err);
                 res.status(500).json({ error: 'Internal server error' });
@@ -269,18 +278,17 @@ app.put('/updateAdminStatus/:userId', (req, res) => {
     );
 });
 
+
+// get the task statistics of each user
 app.get('/getTaskCounts/:userId', (req, res) => {
     const userId = req.params.userId;
 
-    // Define an object to store task counts
     const taskCounts = {
         assigned: 0,
         inProgress: 0,
         done: 0,
     };
 
-    // Fetch the count of tasks with different statuses for the specified user
-    // Use MySQL queries to get the counts
     db.query(
         'SELECT COUNT(*) AS assigned FROM tasks WHERE assigned_to = ? AND status = "Assigned"',
         [userId],
@@ -294,7 +302,6 @@ app.get('/getTaskCounts/:userId', (req, res) => {
             console.log("Assigned: ", results[0].assigned);
             taskCounts.assigned = results[0].assigned;
 
-            // Fetch the count of tasks in progress
             db.query(
                 'SELECT COUNT(*) AS inProgress FROM tasks WHERE assigned_to = ? AND status = "In Progress"',
                 [userId],
@@ -308,7 +315,6 @@ app.get('/getTaskCounts/:userId', (req, res) => {
                     console.log("In Progress: ", results[0].inProgress);
                     taskCounts.inProgress = results[0].inProgress;
 
-                    // Fetch the count of tasks marked as done
                     db.query(
                         'SELECT COUNT(*) AS done FROM tasks WHERE assigned_to = ? AND status = "Done"',
                         [userId],
@@ -323,7 +329,6 @@ app.get('/getTaskCounts/:userId', (req, res) => {
                             taskCounts.done = results[0].done;
 
                             console.log("Task counts: ", taskCounts);
-                            // Send the task counts as a JSON response
                             res.json(taskCounts);
                         }
                     );
@@ -333,6 +338,21 @@ app.get('/getTaskCounts/:userId', (req, res) => {
     );
 });
 
+
+// get the count of tasks, grouped by each status
+app.get('/taskDist', (req, res) => {
+    db.query(
+        'SELECT status, COUNT(*) AS count FROM tasks GROUP BY status',
+        (err, results) => {
+            if (err) {
+                console.error('Error:', err);
+                res.status(500).json({ error: 'Internal server error' });
+            } else {
+                res.json(results);
+            }
+        }
+    );
+});
 
 app.listen(8081, () => {
     console.log(`Server is running on port 8081`);
