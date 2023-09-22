@@ -120,14 +120,14 @@ function UserTasks() {
 
     // Pagination
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [rowsPerPage, setRowsPerPage] = useState(2);
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
     };
 
     const handleChangeRowsPerPage = (event) => {
-        setRowsPerPage(parseInt(event.target.value, 5));
+        setRowsPerPage(parseInt(event.target.value, 2));
         setPage(0);
     };
 
@@ -223,7 +223,7 @@ function UserTasks() {
                     </TableContainer>
                 </Paper>
                 <TablePagination
-                    rowsPerPageOptions={[5, 10, 20]}
+                    rowsPerPageOptions={[2, 3, 4]}
                     component="div"
                     count={taskData.length} // Total number of rows
                     page={page}

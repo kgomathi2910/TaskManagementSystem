@@ -3,6 +3,7 @@ const cors = require('cors');
 const mysql = require('mysql');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
 const app = express();
 app.use(cors());
@@ -22,6 +23,9 @@ db.connect((err) => {
     }
     console.log('Connected to the database');
 });
+
+// Generate a random secret key
+const secretKey = crypto.randomBytes(32).toString('hex');
 
 app.post('/login', (req, res) => {
     const { username, passwd, email, isAdmin } = req.body;
@@ -52,14 +56,16 @@ app.post('/login', (req, res) => {
           return res.status(401).json({ success: false, message: 'Authentication failed' });
         }
 
-        res.json({ success: true, message: 'Login successful', idUser: user.id});
+        // Generate a JWT token
+        const token = jwt.sign(
+            { userId: user.id, username: user.username, email: user.email, isAdmin: user.is_admin },
+            secretKey, 
+            { expiresIn: '1h' } 
+        );
+
+        res.json({ success: true, message: 'Login successful', idUser: user.id, token});
         console.log("Id: ", user.id)
-
-        // // Generate a JWT token
-        // const token = generateToken(user);
-
-        // // Send the token in the response
-        // res.json({ success: true, message: 'Login successful', token });
+        console.log("Token: ", token)
     });
 })
 
@@ -88,11 +94,14 @@ app.post('/signup', async (req, res) => {
                 return res.status(500).json({ success: false, message: 'Internal server error' });
             }
 
-            // Generate a JWT token for the newly registered user
-            // const token = generateToken({ username, email });
+            const token = jwt.sign(
+                { username, email },
+                secretKey, 
+                { expiresIn: '1h' } 
+            );
 
-            // Send the token in the response
-            res.status(201).json({ success: true, message: 'Registration successful' });
+            res.status(201).json({ success: true, message: 'Registration successful', token });
+            console.log("Token from sign up", token)
         });
     });
 });
