@@ -23,4 +23,3 @@ List of APIs:
 13.	app.get('/taskDist/:id', (req, res)
 14.	app.get('/comments/:taskId', (req, res)
 15.	app.post('/comments', (req, res)
-![Uploading image.png…]()
