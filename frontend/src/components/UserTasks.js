@@ -1,7 +1,7 @@
 import { useParams } from "react-router";
 import UserSideNav from './UserSideNav';
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from "react-router-dom"
+import CommentForm from "./CommentForm";
 import {
     Typography,
     Table,
@@ -26,10 +26,8 @@ function UserTasks() {
     console.log("User id from (User.js)", id)
     const [taskData, setTaskData] = useState([]); // contains all tasks of a user in the system
     const [isEditModalOpen, setIsEditModalOpen] = useState(false); // modal for Edit Task
-    const [statusValue, setStatusValue] = useState('');
     const [taskEdit, setTaskEdit] = useState({}); // Store the task being edited
-
-    const navigate = useNavigate();
+    const [comments, setComments] = useState([]);
 
     const handleEditOpenModal = (task) => {
         console.log("task to be editted: ", task)
@@ -133,6 +131,31 @@ function UserTasks() {
         setPage(0);
     };
 
+    // Comments
+    const handleCommentAdded = async (taskId, userId, comment) => {
+        try {
+            const response = await fetch(`http://localhost:8081/comments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ taskId, userId, comment }),
+            });
+
+            if (response.ok) {
+                const commentResponse = await fetch(`http://localhost:8081/comments/${taskId}`);
+                if (commentResponse.ok) {
+                    const commentData = await commentResponse.json();
+                    setComments(commentData.comments);
+                }
+            } else {
+                console.error('Failed to add comment');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    };
+
     return (
         <React.Fragment>
             <UserSideNav id={id} />
@@ -150,31 +173,57 @@ function UserTasks() {
                                     <TableCell>Status</TableCell>
                                     <TableCell>Created By</TableCell>
                                     <TableCell>Tag</TableCell>
+                                    <TableCell>Comments</TableCell>
+                                    <TableCell>Add Comments</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 {Array.isArray(taskData) && taskData.length > 0 ? (
                                     taskData
-                                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                    .map((task) => (
-                                        <TableRow key={task.id} onClick={() => handleEditOpenModal(task)}>
-                                            <TableCell>{task.title}</TableCell>
-                                            <TableCell>{task.deadline}</TableCell>
-                                            <TableCell>{task.status}</TableCell>
-                                            <TableCell>{task.assigned_by}</TableCell>
-                                            <TableCell>{task.tag}</TableCell>
-                                        </TableRow>
-                                    ))) : (
+                                        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                        .map((task) => (
+                                            <TableRow key={task.id}
+                                                onClick={() => handleEditOpenModal(task)}>
+                                                <TableCell>{task.title}</TableCell>
+                                                <TableCell>{task.deadline}</TableCell>
+                                                <TableCell>{task.status}</TableCell>
+                                                <TableCell>{task.assigned_by}</TableCell>
+                                                <TableCell>{task.tag}</TableCell>
+                                                <TableCell>
+                                                    {comments.length > 0 ? (
+                                                        comments
+                                                            .filter((comment) => comment.task_id === task.id) // Filter comments for the current task ID
+                                                            .map((filteredComment, index) => (
+                                                                <TableRow key={index}>
+                                                                    <TableCell>{filteredComment.comment}</TableCell>
+                                                                </TableRow>
+                                                            ))
+                                                    ) : (
+                                                        <span>No comments available</span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                    }}>
+                                                    <CommentForm
+                                                        taskId={task.id}
+                                                        userId={id}
+                                                        onCommentAdded={handleCommentAdded}
+                                                    />
+                                                </TableCell>
+                                            </TableRow>
+                                        ))) : (
                                     <TableRow>
-                                        <TableCell>No tasks found.</TableCell>
+                                        <TableCell>No tasks found</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
                         </Table>
                     </TableContainer>
                 </Paper>
-                <TablePagination 
-                    rowsPerPageOptions={[5, 10, 20]} 
+                <TablePagination
+                    rowsPerPageOptions={[5, 10, 20]}
                     component="div"
                     count={taskData.length} // Total number of rows
                     page={page}

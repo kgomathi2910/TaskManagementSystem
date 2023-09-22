@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from "react-router";
 import AdminSideNav from './AdminSideNav';
 import { useNavigate } from "react-router-dom"
+import CommentForm from "./CommentForm";
 import {
     Typography,
     Table,
@@ -26,7 +27,7 @@ function AdminTasks() {
     const [isModalOpen, setIsModalOpen] = useState(false); // modal for Add Task
     const [isEditModalOpen, setIsEditModalOpen] = useState(false); // modal for Edit Task
     const [statusValue, setStatusValue] = useState('');
-
+    const [comments, setComments] = useState([]);
     const [taskEdit, setTaskEdit] = useState({}); // Store the task being edited
 
     const { id } = useParams();
@@ -194,17 +195,42 @@ function AdminTasks() {
 
     // Pagination
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [rowsPerPage, setRowsPerPage] = useState(2);
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
     };
 
     const handleChangeRowsPerPage = (event) => {
-        setRowsPerPage(parseInt(event.target.value, 5));
+        setRowsPerPage(parseInt(event.target.value, 2));
         setPage(0);
     };
 
+    // Comments
+    const handleCommentAdded = async (taskId, userId, comment) => {
+        try {
+            const response = await fetch(`http://localhost:8081/comments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ taskId, userId, comment }),
+            });
+
+            if (response.ok) {
+                const commentResponse = await fetch(`http://localhost:8081/comments/${taskId}`);
+                if (commentResponse.ok) {
+                    const commentData = await commentResponse.json();
+                    setComments(commentData.comments);
+                    console.log("Comments: ", comments)
+                }
+            } else {
+                console.error('Failed to add comment');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    };
 
     return (
         <React.Fragment>
@@ -223,21 +249,46 @@ function AdminTasks() {
                                     <TableCell>Status</TableCell>
                                     <TableCell>Created By</TableCell>
                                     <TableCell>Tag</TableCell>
+                                    <TableCell>Comments</TableCell>
+                                    <TableCell>Add Comments</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 {Array.isArray(taskData) && taskData.length > 0 ? (
                                     taskData
-                                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                    .map((task) => (
-                                        <TableRow key={task.id} onClick={() => handleEditOpenModal(task)}>
-                                            <TableCell>{task.title}</TableCell>
-                                            <TableCell>{task.deadline}</TableCell>
-                                            <TableCell>{task.status}</TableCell>
-                                            <TableCell>{task.assigned_by}</TableCell>
-                                            <TableCell>{task.tag}</TableCell>
-                                        </TableRow>
-                                    ))) : (
+                                        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                        .map((task) => (
+                                            <TableRow key={task.id} onClick={() => handleEditOpenModal(task)}>
+                                                <TableCell>{task.title}</TableCell>
+                                                <TableCell>{task.deadline}</TableCell>
+                                                <TableCell>{task.status}</TableCell>
+                                                <TableCell>{task.assigned_by}</TableCell>
+                                                <TableCell>{task.tag}</TableCell>
+                                                <TableCell>
+                                                    {comments.length > 0 ? (
+                                                        comments
+                                                            .filter((comment) => comment.task_id === task.id) // Filter comments for the current task ID
+                                                            .map((filteredComment, index) => (
+                                                                <TableRow key={index}>
+                                                                    <TableCell>{filteredComment.comment}</TableCell>
+                                                                </TableRow>
+                                                            ))
+                                                    ) : (
+                                                        <span>No comments available</span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                    }}>
+                                                    <CommentForm
+                                                        taskId={task.id}
+                                                        userId={id}
+                                                        onCommentAdded={handleCommentAdded}
+                                                    />
+                                                </TableCell>
+                                            </TableRow>
+                                        ))) : (
                                     <TableRow>
                                         <TableCell>No tasks found</TableCell>
                                     </TableRow>
@@ -246,8 +297,8 @@ function AdminTasks() {
                         </Table>
                     </TableContainer>
                 </Paper>
-                <TablePagination 
-                    rowsPerPageOptions={[5, 10, 20]} 
+                <TablePagination
+                    rowsPerPageOptions={[2, 3, 4]}
                     component="div"
                     count={taskData.length} // Total number of rows
                     page={page}

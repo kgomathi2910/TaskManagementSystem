@@ -389,6 +389,31 @@ app.get('/taskDist/:id', (req, res) => {
     );
 });
 
+app.get('/comments/:taskId', (req, res) => {
+    const taskId = req.params.taskId;
+    db.query('SELECT * FROM comments WHERE task_id = ?', [taskId], (err, results) => {
+      if (err) {
+        console.error('Error fetching comments:', err);
+        res.status(500).json({ error: 'Failed to fetch comments' });
+      } else {
+        res.json({ comments: results });
+      }
+    });
+  });
+  
+  app.post('/comments', (req, res) => {
+    const { taskId, userId, comment } = req.body;
+    const newComment = { task_id: taskId, user_id: userId, comment };
+    db.query('INSERT INTO comments SET ?', newComment, (err) => {
+      if (err) {
+        console.error('Error adding comment:', err);
+        res.status(500).json({ error: 'Failed to add comment' });
+      } else {
+        res.json({ message: 'Comment added successfully' });
+      }
+    });
+  });
+
 app.listen(8081, () => {
     console.log(`Server is running on port 8081`);
 });
