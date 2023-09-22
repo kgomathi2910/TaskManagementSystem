@@ -1,4 +1,4 @@
-<img width="1228" alt="Pasted Graphic 42" src="https://github.com/kgomathi2910/TaskManagementSystem/assets/67832802/0d0e4650-7b6c-4d38-80cb-1c96eee52304">This is a task management system using the following technologies:
+This is a task management system using the following technologies:
 
 1. React
 2. ReduxToolkit/Redux 
