@@ -315,6 +315,7 @@ function AdminTasks() {
                     Add Task
                 </Button>
                 <br /><br />
+                <Typography>Add a comment to see all comments</Typography>
                 <Typography>Refresh the page to see the changes made through 'Edit task'</Typography>
             </Box>
 

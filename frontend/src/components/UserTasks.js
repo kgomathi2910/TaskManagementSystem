@@ -232,6 +232,7 @@ function UserTasks() {
                     onRowsPerPageChange={handleChangeRowsPerPage}
                 />
                 <br />
+                <Typography>Add a comment to see all comments</Typography>
                 <Typography>Refresh the page to see the changes</Typography>
             </Box>
 
